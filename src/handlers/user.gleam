@@ -1,5 +1,4 @@
 import gleam/int
-import gleam/option.{Some}
 import gleam/result
 import models/user
 import wisp.{type Request, type Response}
@@ -8,11 +7,18 @@ pub fn create_one(req: Request) -> Response {
   use json <- wisp.require_json(req)
 
   let result_user = {
-    use user <- result.try(user.from_json(json))
+    use create_user_params <- result.try(user.parse_create_params(json))
 
     // TODO: save to database here 
 
-    Ok(user.to_json(user))
+    user.User(
+      name: create_user_params.name,
+      email: create_user_params.email,
+      balance: create_user_params.balance,
+      id: 1,
+    )
+    |> user.to_json
+    |> Ok
   }
 
   case result_user {
@@ -22,7 +28,7 @@ pub fn create_one(req: Request) -> Response {
 }
 
 pub fn one(id: Int) -> Response {
-  user.User(name: "Bob", email: "bob@email.com", id: Some(id), balance: 234.1)
+  user.User(name: "Bob", email: "bob@email.com", id: id, balance: 234.1)
   |> user.to_json
   |> wisp.json_response(200)
 }
